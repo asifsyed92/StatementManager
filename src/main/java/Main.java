@@ -1,12 +1,5 @@
-import org.apache.tika.Tika;
-import org.apache.tika.exception.TikaException;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.pdf.PDFParser;
-import org.apache.tika.parser.pdf.PDFParserConfig;
-import org.apache.tika.sax.BodyContentHandler;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -19,29 +12,22 @@ import java.util.List;
 
 public class Main {
 
-    private static int FOR_TAX_YEAR = 2017;
+    private static int FOR_TAX_YEAR = 2023;
     private static String YEAR_EXTENSION = "/" + FOR_TAX_YEAR;
     private static DateTimeFormatter check = DateTimeFormatter.ofPattern("MM/dd/uuuu");
     private static List<String> exclusions = new ArrayList<>(Arrays.asList("Payment Thank You", "AUTOMATIC PAYMENT"));
     public static void main(String[] args) {
 
-        String filePath = "C:/Users/syeda/Documents/Finance/Chase Bank Statements/20230425-statements-6715-.pdf";
+        String filePath = "/Users/asif/IdeaProjects/StatementManager/20230523-statements-6715-.pdf";
 
-        Tika tika = new Tika();
         try(InputStream is = new FileInputStream(filePath)){
-            PDFParser pdfParser = new PDFParser();
+            PDDocument pd = PDDocument.load(is);
+            PDFTextStripper pdfTextStripper = new PDFTextStripper();
+            pdfTextStripper.setSortByPosition(true);
+            pdfTextStripper.setWordSeparator(" ");
 
-            PDFParserConfig pdfParserConfig = new PDFParserConfig();
-            pdfParserConfig.setEnableAutoSpace(true);
-            pdfParserConfig.setSortByPosition(true);
+            String data = pdfTextStripper.getText(pd);
 
-            ParseContext parseContext = new ParseContext();
-            parseContext.set(PDFParserConfig.class,pdfParserConfig);
-
-            ContentHandler contentHandler = new BodyContentHandler();
-
-            pdfParser.parse(is,contentHandler,new Metadata(),parseContext);
-            String data = contentHandler.toString();
             List<ChaseRecord> l = new ArrayList<>();
             for(String line : data.split("\n")){
                 if(line.isEmpty()) continue;
@@ -72,10 +58,8 @@ public class Main {
 
             }
 
-            l.forEach(cr -> System.err.println(cr.date + "|" + cr.desc + "|" + cr.amt + "|" + cr.balance));
-
-
-        } catch (IOException | TikaException | SAXException e) {
+            l.forEach(cr -> System.out.println(cr.date + "|" + cr.desc + "|" + cr.amt + "|" + cr.balance));
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
