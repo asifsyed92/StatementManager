@@ -1,6 +1,7 @@
 import extractor.ChaseRecordExtractor;
 import manager.ChaseStatementFileManager;
 import parser.ChaseStatementParser;
+import processor.ChaseStatementFileProcessor;
 
 public class Main {
 
@@ -12,10 +13,11 @@ public class Main {
 
         ChaseStatementFileManager sfm = new ChaseStatementFileManager(dirPath);
 
-        ChaseStatementParser sp = new ChaseStatementParser();
-        ChaseRecordExtractor re = new ChaseRecordExtractor();
+        ChaseStatementFileProcessor sfp = new ChaseStatementFileProcessor(sfm);
 
-        sfm.getAbsoluteNames().forEach(file -> re.extract(sp.parse(file)).forEach(System.out::println));
+        sfp.getChaseRecords().forEach(System.out::println);
+
+
     }
 
 }
